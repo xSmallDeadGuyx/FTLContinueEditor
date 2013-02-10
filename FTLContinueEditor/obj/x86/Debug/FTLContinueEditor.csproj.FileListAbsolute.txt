@@ -1,0 +1,9 @@
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\bin\Debug\FTLContinueEditor.exe
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\bin\Debug\FTLContinueEditor.pdb
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\obj\x86\Debug\FTLContinueEditor.MainForm.resources
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\obj\x86\Debug\FTLContinueEditor.Properties.Resources.resources
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\obj\x86\Debug\FTLContinueEditor.exe
+C:\Users\Alex\FTLContinueEditor\FTLContinueEditor\obj\x86\Debug\FTLContinueEditor.pdb
