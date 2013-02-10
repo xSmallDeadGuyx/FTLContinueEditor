@@ -29,6 +29,8 @@ namespace FTLContinueEditor
         public int room;
         public int roomTile;
 
+        public int unknown;
+
         public int pilotingSkill;
         public int engineSkill;
         public int shieldSkill;
@@ -43,6 +45,17 @@ namespace FTLContinueEditor
         public int evasionsStat;
         public int jumpsStat;
         public int masteriesStat;
+    }
+
+    public struct ShipSystem
+    {
+        public int capacity;
+        public int powerBars;
+        public int damagedBars;
+        public int ionizedBars;
+        public int deionizationTicks;
+        public int repairProgress;
+        public int damageProgress;
     }
 
     public partial class MainForm : Form
@@ -69,6 +82,31 @@ namespace FTLContinueEditor
             "rock_cruiser", "rock_cruiser_2",
             "energy_cruiser", "energy_cruiser_2",
             "crystal_cruiser", "crystal_cruiser_2"
+        };
+
+        public string[] raceIDs = {
+            "human",
+            "engi",
+            "energy",
+            "slug",
+            "rock",
+            "mantis",
+            "crystal"
+        };
+
+        public string[] systemNames = {
+            "Shields",
+            "Engines",
+            "Oxygen",
+            "Weapons",
+            "Drone control",
+            "Medbay",
+            "Pilot",
+            "Sensors",
+            "Doors",
+            "Teleporter",
+            "Cloaking",
+            "Artillery"
         };
 
         public string raceToHumanReadable(string race)
@@ -98,6 +136,13 @@ namespace FTLContinueEditor
         public string shipArtID;
         public List<CrewMemberOverview> crewOverview = new List<CrewMemberOverview>();
         public int shipHull;
+        public int fuel;
+        public int droneParts;
+        public int missiles;
+        public int scrap;
+        public List<CrewMember> crewMembers = new List<CrewMember>();
+        public int powerCapacity;
+        public List<ShipSystem> systems = new List<ShipSystem>();
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -155,13 +200,92 @@ namespace FTLContinueEditor
                     c.race = reader.readString();
                     c.name = reader.readString();
                     crewOverview.Add(c);
-                    crewList.Items.Add(c.name + " (" + raceToHumanReadable(c.race) + ")");
                 }
 
                 //-----SHIP RESOURCES-----
                 shipHull = shipHullBar.Value = reader.readInt();
                 shipHullBox.Value = (decimal)shipHull;
+                fuel = reader.readInt();
+                fuelBox.Value = (decimal)fuel;
+                droneParts = reader.readInt();
+                dronePartsBox.Value = (decimal)droneParts;
+                missiles = reader.readInt();
+                missilesBox.Value = (decimal)missiles;
+                scrap = reader.readInt();
+                scrapBox.Value = (decimal)scrap;
+
+                //-----CREW MEMBERS-----
+                num = reader.readInt();
+                crewMembers.Clear();
+                for (int i = 0; i < num; i++)
+                {
+                    CrewMember c = new CrewMember();
+                    c.name = reader.readString();
+                    c.race = reader.readString();
+                    c.isDrone = reader.readInt() == 1;
+                    c.health = reader.readInt();
+                    c.x = reader.readInt();
+                    c.y = reader.readInt();
+                    c.room = reader.readInt();
+                    c.roomTile = reader.readInt();
+                    c.unknown = reader.readInt();
+                    c.pilotingSkill = reader.readInt();
+                    c.engineSkill = reader.readInt();
+                    c.shieldSkill = reader.readInt();
+                    c.weaponSkill = reader.readInt();
+                    c.repairSkill = reader.readInt();
+                    c.combatSkill = reader.readInt();
+                    c.gender = reader.readInt();
+                    c.repairsStat = reader.readInt();
+                    c.killsStat = reader.readInt();
+                    c.evasionsStat = reader.readInt();
+                    c.jumpsStat = reader.readInt();
+                    c.masteriesStat = reader.readInt();
+                    crewMembers.Add(c);
+                    crewList.Items.Add(c.name + " (" + raceToHumanReadable(c.race) + ")");
+                }
+
+                crewList.SelectedIndex = 0;
+                updateCrewInfo(crewMembers[0]);
+
+                for (int i = 0; i < systemNames.Length; i++)
+                {
+                    ShipSystem s = new ShipSystem();
+                    s.capacity = reader.readInt();
+                    if (s.capacity > 0)
+                    {
+                        s.powerBars = reader.readInt();
+                        s.damageProgress = reader.readInt();
+                        s.ionizedBars = reader.readInt();
+                        s.deionizationTicks = reader.readInt();
+                        s.repairProgress = reader.readInt();
+                        s.damageProgress = reader.readInt();
+                    }
+                    systems.Add(s);
+                }
+
+                byte[] unread = reader.Reader.ReadBytes((int) (reader.Reader.BaseStream.Length - reader.Reader.BaseStream.Position));
+                for (int i = 0; i < unread.Length; i++)
+                    unreadBox.AppendText(unread[i] + (char.IsLetterOrDigit((char) unread[i]) ? " -> " + (char) unread[i] : "") + "\n");
             }
+        }
+
+        private void updateCrewInfo(CrewMember c)
+        {
+            crewNameBox.Text = c.name;
+            for (int i = 0; i < raceIDs.Length; i++)
+                if (raceIDs[i] == c.race)
+                    crewRaceList.SelectedIndex = i;
+            crewIsDroneCheckbox.Checked = c.isDrone;
+
+            crewHealthBox.Maximum = crewHealthBar.Maximum = c.race == "energy" ? 70 : c.race == "rock" ? 150 : c.race == "crystal" ? 125 : 100;
+            crewHealthBar.Value = c.health;
+            crewHealthBox.Value = (decimal)c.health;
+        }
+
+        private void crewList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            updateCrewInfo(crewMembers[crewList.SelectedIndex]);
         }
 
         private void matchArtCheckbox_CheckedChanged(object sender, EventArgs e)
@@ -179,12 +303,82 @@ namespace FTLContinueEditor
 
         private void shipHullBox_ValueChanged(object sender, EventArgs e)
         {
-            shipHullBar.Value = (int) shipHullBox.Value;
+            shipHullBar.Value = (int)shipHullBox.Value;
         }
 
         private void shipHullBar_Scroll(object sender, EventArgs e)
         {
             shipHullBox.Value = shipHullBar.Value;
+        }
+
+        private void crewHealthBox_ValueChanged(object sender, EventArgs e)
+        {
+            crewHealthBar.Value = (int)crewHealthBox.Value;
+        }
+
+        private void crewHealthBar_Scroll(object sender, EventArgs e)
+        {
+            crewHealthBox.Value = crewHealthBar.Value;
+        }
+
+        private void crewPilotingBox_ValueChanged(object sender, EventArgs e)
+        {
+            crewPilotingBar.Value = (int)crewPilotingBox.Value;
+        }
+
+        private void crewPilotingBar_Scroll(object sender, EventArgs e)
+        {
+            crewPilotingBox.Value = crewPilotingBar.Value;
+        }
+
+        private void crewEnginesBox_ValueChanged(object sender, EventArgs e)
+        {
+            crewEnginesBar.Value = (int)crewEnginesBox.Value;
+        }
+
+        private void crewEnginesBar_Scroll(object sender, EventArgs e)
+        {
+            crewEnginesBox.Value = crewEnginesBar.Value;
+        }
+
+        private void crewShieldsBox_ValueChanged(object sender, EventArgs e)
+        {
+            crewShieldsBar.Value = (int)crewShieldsBox.Value;
+        }
+
+        private void crewShieldsBar_Scroll(object sender, EventArgs e)
+        {
+            crewShieldsBox.Value = crewShieldsBar.Value;
+        }
+
+        private void crewWeaponsBox_ValueChanged(object sender, EventArgs e)
+        {
+            crewWeaponsBar.Value = (int)crewWeaponsBox.Value;
+        }
+
+        private void crewWeaponsBar_Scroll(object sender, EventArgs e)
+        {
+            crewWeaponsBox.Value = crewWeaponsBar.Value;
+        }
+
+        private void crewRepairBox_ValueChanged(object sender, EventArgs e)
+        {
+            crewRepairBar.Value = (int)crewRepairBox.Value;
+        }
+
+        private void crewRepairBar_Scroll(object sender, EventArgs e)
+        {
+            crewRepairBox.Value = crewRepairBar.Value;
+        }
+
+        private void crewCombatBox_ValueChanged(object sender, EventArgs e)
+        {
+            crewCombatBar.Value = (int)crewCombatBox.Value;
+        }
+
+        private void crewCombatBar_Scroll(object sender, EventArgs e)
+        {
+            crewCombatBox.Value = crewCombatBar.Value;
         }
     }
 }
